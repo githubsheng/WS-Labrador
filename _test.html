@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="jsoutput/Utils.js"></script>
+    <script src="jsoutput/AST_Token.js"></script>
+    <script src="jsoutput/Tokenizer.js"></script>
+</head>
+<body>
+<textarea id="ta" style="width: 400px; height: 600px;">
+
+</textarea>
+<script>
+    var ta = document.getElementById("ta");
+    function print_tokens() {
+        var n = new Tokenizer(ta.value);
+        var t;
+        do {
+            t = n();
+            console.log(t.type + " ___ " + t.value);
+        } while (t && t.type !== "eof");
+    }
+</script>
+</body>
+</html>
