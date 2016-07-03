@@ -5,9 +5,12 @@
 ///<reference path="Utils.ts"/>
 ///<reference path="AST_Token.ts"/>
 
+
+
+
 function Tokenizer($TEXT:string) {
 
-    function token(type:string, value:string) {
+    function token(type:TokenType, value:string) {
         return new AST_Token(type, value, S.tokPos, S.tokLine);
     }
 
@@ -34,7 +37,7 @@ function Tokenizer($TEXT:string) {
     var OPERATORS_START_CHAR = makePredicate("+ - * % = < > !");
 
     //all operators in al
-    var OPERATORS_AL = makePredicate(["==", "<", "<=", ">", ">=", "==", "!=", "+", "-", "*", "/", "%", "!", "and"]);
+    var OPERATORS_AL = makePredicate(["==", "<", "<=", ">", ">=", "==", "!=", "+", "-", "++", "--", "*", "/", "%", "!", "and"]);
 
     var KEYWORDS_VALUE_AL = makePredicate("true false undefined");
 
@@ -156,22 +159,24 @@ function Tokenizer($TEXT:string) {
         var text = read_while(function () {
             return !(testIfPeekIs("<<") || testIfPeekIs("${") || testIfPeekIs("<%") || testIfPeekIs("[") || peek(1) === null);
         });
-        return token("text", text.trim());
+        text = text.trim();
+        if(text.length == 0) return null;
+        return token(TokenType.Text, text);
     }
 
     function read_identifier_at() {
         var w = read_identifier();
-        if (KEYWORDS_AT(w)) return token("kw_at", w);
-        return token("identifier", w);
+        if (KEYWORDS_AT(w)) return token(TokenType.KW_AT, w);
+        return token(TokenType.Identifier, w);
     }
 
     function read_identifier_al() {
         var w = read_identifier();
-        if (KEYWORDS_VALUE_AL(w)) return token("kw_val_al", w); //true, false, undefined
-        if (OPERATORS_AL(w)) return token("operator", w); //operator "and" match an identifier patter, but is really an operator
-        if (KEYWORDS_CALL_AL(w)) return token("kw_call_al", w); //function call in al
-        if (KEYWORDS_AL(w)) return token("kw_al", w);
-        return token("identifier", w);
+        if (KEYWORDS_VALUE_AL(w)) return token(TokenType.KW_Val_AL, w); //true, false, undefined
+        if (OPERATORS_AL(w)) return token(TokenType.Operator, w); //operator "and" match an identifier patter, but is really an operator
+        if (KEYWORDS_CALL_AL(w)) return token(TokenType.KW_Call_AL, w); //function call in al
+        if (KEYWORDS_AL(w)) return token(TokenType.KW_AL, w);
+        return token(TokenType.Identifier, w);
     }
 
     function read_string() {
@@ -187,7 +192,7 @@ function Tokenizer($TEXT:string) {
             }
             ret += ch;
         }
-        return token("string", ret);
+        return token(TokenType.String, ret);
     }
 
     function read_num(dot_prefix?:string) {
@@ -200,27 +205,14 @@ function Tokenizer($TEXT:string) {
         if (dot_prefix) num = dot_prefix + num;
         var val = parseFloat(num);
         if (!isNaN(val)) {
-            return token("num", val.toString());
+            return token(TokenType.Num, val.toString());
         } else {
             parse_error("Invalid syntax: " + num);
         }
     }
 
-    function read_operator(prefix?:string) {
-        //for example, if i have consumed +, and peek reveals next char is also +, then i just "grow" the
-        //current operator from + to ++;
-        function grow(op:string) {
-            if (!peek(1)) return op;
-            var bigger = op + peek(1);
-            if (OPERATORS_AL(bigger)) {
-                consume();
-                return grow(bigger);
-            } else {
-                return op;
-            }
-        }
-
-        return token("operator", grow(prefix || consume()));
+    function read_operator(prefix?: string) {
+        return token(TokenType.Operator, prefix||consume());
     }
 
     //if it turns out to be an operator, such as /, or /=, then return that operator.
@@ -239,7 +231,7 @@ function Tokenizer($TEXT:string) {
         consume(); //consume the dot
         return is_digit(peek(1).charCodeAt(0))
             ? read_num(".")
-            : token("punc", ".");
+            : token(TokenType.Punc, ".");
     }
 
     function start_token() {
@@ -252,29 +244,31 @@ function Tokenizer($TEXT:string) {
     }
 
     var text_mode:next_token = function () {
-        if(peek(1) === null) return token("eof", "eof");
+        if(peek(1) === null) return token(TokenType.EOF, "eof");
         if (testIfPeekIs("<<")) {
             forward(2);
             S.mode = question_attribute_mode;
-            return token("q_attr_start", "<<"); //question / section attributes section start
+            return token(TokenType.QAS, "<<"); //question / section attributes section start
         }
         if (testIfPeekIs("[")) {
             consume();
             S.mode = option_attribute_mode;
-            return token("o_attr_start", "["); //option attributes section start
+            return token(TokenType.OAS, "["); //option attributes section start
         }
         if (testIfPeekIs("${")) {
             forward(2);
             S.mode = get_ee_mode(text_mode);
-            return token("ee_start", "${"); //embedded expression start
+            return token(TokenType.EES, "${"); //embedded expression start
         }
         if (testIfPeekIs("<%")) {
             forward(2);
             S.mode = al_block_mode;
-            return token("alb_start", "<%"); //al block start
+            return token(TokenType.ALBS, "<%"); //al block start
         }
         start_token();
-        return read_text();
+        var ret = read_text();
+        if(ret === null) return text_mode();
+        return ret;
     };
 
     S.mode = text_mode;
@@ -283,7 +277,7 @@ function Tokenizer($TEXT:string) {
         function end_mode_handler(){
             forward(2);
             S.mode = text_mode;
-            return token("q_attr_end", ">>"); //option attributes section end
+            return token(TokenType.QAE, ">>"); //option attributes section end
         }
         return attribute_mode(">>", end_mode_handler);
     };
@@ -292,7 +286,7 @@ function Tokenizer($TEXT:string) {
         function end_mode_handler(){
             consume();
             S.mode = text_mode;
-            return token("o_attr_end", "]"); //option attributes section end
+            return token(TokenType.OAE, "]"); //option attributes section end
         }
         return attribute_mode("]", end_mode_handler);
     };
@@ -304,13 +298,13 @@ function Tokenizer($TEXT:string) {
         if (testIfPeekIs("${")) {
             forward(2);
             S.mode = get_ee_mode(question_attribute_mode);
-            return token("ee_start", "${"); //embedded expression start
+            return token(TokenType.EES, "${"); //embedded expression start
         }
 
         var ch = peek(1);
-        if (ch === null) return token("eof", "eof");
+        if (ch === null) return token(TokenType.EOF, "eof");
         if (ch === "\"" || ch === "\'") return read_string();
-        if (ch === "=") return token("punc", consume());
+        if (ch === "=") return token(TokenType.Punc, consume());
         if (is_identifier_start(ch.charCodeAt(0))) return read_identifier_at();
 
         parse_error("Unexpected character '" + ch + "'");
@@ -321,7 +315,7 @@ function Tokenizer($TEXT:string) {
             function handle_ee_mode_termination() {
                 consume(); //consume }
                 S.mode = current_mode; //set the mode to the previous mode. for instance, if the ee is in text, then I go back to text mode. if the ee is in question attributes section, i go back to attribute_mode
-                return token("ee_end", "}");
+                return token(TokenType.EEE, "}");
             }
             return al_mode("}", handle_ee_mode_termination);
         }
@@ -335,9 +329,9 @@ function Tokenizer($TEXT:string) {
             if (peek(1) == ">") {
                 S.mode = text_mode;
                 consume(); //consume >
-                return token("alb_end", "%>"); //al block end
+                return token(TokenType.ALBE, "%>"); //al block end
             }
-            return token("punc", "%");
+            return token(TokenType.Punc, "%");
         }
         return al_mode("%", handle_percentage);
     };
@@ -347,7 +341,7 @@ function Tokenizer($TEXT:string) {
             skip_whitespace();
             start_token();
             var ch = peek(1);
-            if (!ch) return token("eof", "eof");
+            if (!ch) return token(TokenType.EOF, "eof");
             if (ch === end_mode_predicate) return end_mode_handler();
             var code = ch.charCodeAt(0);
             switch (code) {
@@ -364,7 +358,7 @@ function Tokenizer($TEXT:string) {
                 }
             }
             if (is_digit(code)) return read_num();
-            if (PUNC_CHARS_AL(ch)) return token("punc", consume());
+            if (PUNC_CHARS_AL(ch)) return token(TokenType.Punc, consume());
             if (OPERATORS_START_CHAR(ch)) return read_operator();
             if (is_identifier_start(code)) return read_identifier_al();
 
@@ -377,23 +371,9 @@ function Tokenizer($TEXT:string) {
         return S.mode();
     }
 
-    //following defined errors.
+//following defined errors.
     function parse_error(msg:string) {
         js_error(msg, S.tokLine, S.tokPos);
-    }
-
-    function JS_Parse_Error(message:string, line:number, pos:number) {
-        this.message = message;
-        this.line = line;
-        this.pos = pos;
-    }
-
-    JS_Parse_Error.prototype.toString = function () {
-        return this.message + " (line: " + this.line + ", pos: " + this.pos + ")" + "\n\n" + this.message;
-    };
-
-    function js_error(message, line, pos) {
-        throw new JS_Parse_Error(message, line, pos);
     }
 
     return next_token;
