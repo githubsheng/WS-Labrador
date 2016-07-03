@@ -42,3 +42,29 @@ function makePredicate(words: string | string[]): Predicate{
     }
     return <Predicate>(new Function("str", f));
 }
+
+class Map<T> extends null {
+
+    public set(key: string, t: T) {
+        this[key] = t;
+    }
+
+    public get(key: string): T {
+        return this[key];
+    }
+
+}
+
+function JS_Parse_Error(message:string, line:number, pos:number) {
+    this.message = message;
+    this.line = line;
+    this.pos = pos;
+}
+
+JS_Parse_Error.prototype.toString = function () {
+    return this.message + " (line: " + this.line + ", pos: " + this.pos + ")" + "\n\n" + this.message;
+};
+
+function js_error(message, line, pos) {
+    throw new JS_Parse_Error(message, line, pos);
+}
