@@ -18,8 +18,8 @@
         var t;
         do {
             t = n();
-            console.log(t.type + " ___ " + t.value);
-        } while (t && t.type !== "eof");
+            console.log(TokenType[t.type] + " ___ " + t.value);
+        } while (t && t.value !== "eof");
     }
 </script>
 </body>
