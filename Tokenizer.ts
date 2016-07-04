@@ -3,7 +3,7 @@
  */
 
 ///<reference path="Utils.ts"/>
-///<reference path="AST_Token.ts"/>
+///<reference path="Tree.ts"/>
 
 
 
