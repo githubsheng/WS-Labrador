@@ -159,6 +159,7 @@ class AST_Token {
 }
 
 class AST_Node {
+    symbol: Symbol; //null if this field does not apply for the node
     constructor(public start: AST_Token, public end: AST_Token){}
 }
 
