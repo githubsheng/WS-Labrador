@@ -181,11 +181,23 @@ class AST_Question extends AST_SurveyComponent {
 }
 
 class AST_Section extends AST_SurveyComponent {
-
+    attributes: AST_Attribute[];
+    body: AST_SurveyComponent[]; //can be question or interlude nodes.
+    constructor(start: AST_Token, attributes: AST_Attribute[], body: AST_SurveyComponent[], end: AST_Token){
+        super(start, end);
+        this.attributes = attributes;
+        this.body = body;
+    }
 }
 
 class AST_Interlude extends AST_SurveyComponent {
-
+    attributes: AST_Attribute[];
+    body: AST_Node[]; //inside interlude there should not be section, question, row, column definitions related nodes.
+    constructor(start: AST_Token, attributes: AST_Attribute[], body: AST_Node[], end: AST_Token){
+        super(start, end);
+        this.attributes = attributes;
+        this.body = body;
+    }
 }
 
 class AST_Option extends AST_Node {
