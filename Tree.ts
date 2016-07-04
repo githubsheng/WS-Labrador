@@ -10,7 +10,7 @@ enum TokenType {
 
     Text, KW_AT, QAS/*question attributes start*/, QAE/*question attributes end*/, OAS/*option attributes start*/,
     OAE/*option attributes end*/, EES/*embedded expression start*/, EEE/*embedded expression end*/,
-    ALBS/*al block start*/, ALBE/*al block ends*/
+    ALBS/*al block start*/, ALBE /*al block ends*/
 }
 
 interface Scope {
@@ -163,11 +163,20 @@ class AST_Node {
 }
 
 class AST_SurveyComponent extends AST_Node {
-
 }
 
 class AST_Question extends AST_SurveyComponent {
-
+    text: AST_Node[]; //an array of string and expressions...
+    attributes: AST_Attribute[];
+    rows: AST_Row[];
+    columns: AST_Column[];
+    constructor(public start: AST_Token, text: AST_Node[], attributes: AST_Attribute[], rows: AST_Row[], columns: AST_Column[], public end: AST_Token) {
+        super(start, end);
+        this.text = text;
+        this.attributes = attributes;
+        this.rows = rows;
+        this.columns = columns;
+    }
 }
 
 class AST_Section extends AST_SurveyComponent {
@@ -176,6 +185,38 @@ class AST_Section extends AST_SurveyComponent {
 
 class AST_Interlude extends AST_SurveyComponent {
 
+}
+
+class AST_Option extends AST_Node {
+    text: AST_Node[];
+    attributes: AST_Attribute[];
+    constructor(start: AST_Token, text: AST_Node[], attributes: AST_Attribute[], end: AST_Token){
+        super(start, end);
+        this.text = text;
+        this.attributes = attributes;
+    }
+}
+
+class AST_Row extends AST_Option {
+    constructor(start: AST_Token, text: AST_Node[], attributes: AST_Attribute[], end: AST_Token){
+        super(start, text, attributes, end);
+    }
+}
+
+class AST_Column extends AST_Option {
+    constructor(start: AST_Token, text: AST_Node[], attributes: AST_Attribute[], end: AST_Token){
+        super(start, text, attributes, end);
+    }
+}
+
+class AST_Attribute extends AST_Node {
+    name: string;
+    value: AST_Node; //null if there is no value
+    constructor(start: AST_Token, name: string, value: AST_Node, end: AST_Token) {
+        super(start, end);
+        this.name = name;
+        this.value = value;
+    }
 }
 
 //todo: add rows and columns, attributes....
