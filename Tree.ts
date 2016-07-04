@@ -296,6 +296,16 @@ class AST_Call extends AST_Node {
     }
 }
 
+class AST_HasAnswer extends AST_Node {
+    public question: AST_SymbolRef;
+    public answers: AST_SymbolRef[];
+    constructor(start: AST_Token, question: AST_SymbolRef, answers: AST_SymbolRef[], end: AST_Token) {
+        super(start, end);
+        this.question = question;
+        this.answers = answers;
+    }
+}
+
 class AST_PropAccess extends AST_Node {
     public container: AST_PropAccess | AST_SymbolRef;
     public property: AST_SymbolRef;
