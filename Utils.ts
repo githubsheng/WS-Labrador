@@ -50,7 +50,7 @@ class Map<T> extends null {
     }
 
     public get(key: string): T {
-        return this[key];
+        return this[key] === undefined ? null: this[key];
     }
 
 }
