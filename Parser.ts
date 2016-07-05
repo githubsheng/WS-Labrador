@@ -70,12 +70,14 @@ function Parser(input:() => AST_Token) {
 
     //parse will continue calling this method until reaching eof
     function parse() {
-        switch (S.token.type) {
-            case TokenType.QAS:
-                console.log(question());
-                break;
-            case TokenType.ALBS:
-            //handle interlude
+        while(S.token.type !== TokenType.EOF) {
+            switch (S.token.type) {
+                case TokenType.QAS:
+                    console.log(question());
+                    break;
+                case TokenType.ALBS:
+                //handle interlude
+            }
         }
     }
     
@@ -110,9 +112,8 @@ function Parser(input:() => AST_Token) {
     }
 
     function attribute(): AST_Attribute{
-        if(is(TokenType.KW_AT) || is(TokenType.Identifier)) {
-            let left = S.token;
-            next();
+        if(is(TokenType.KW_AT)) {
+            let left = match_token(TokenType.KW_AT);
             if(is(TokenType.Operator, "=")){
                 next();
                 let valNode: AST_Node;
@@ -123,13 +124,15 @@ function Parser(input:() => AST_Token) {
                 } else {
                     parse_error("SyntaxError: value of an attribute must be either a string or an embedded expression, but found " + S.token.value);
                 }
-                return new AST_Attribute(left, left.value, valNode, valNode.end);
+                return new AST_Attribute(left, left.value, valNode, false, valNode.end);
             } else {
-                return new AST_Attribute(left, left.value, null, left);
+                return new AST_Attribute(left, left.value, null, false, left);
             }
-        } else {
-            js_error("SyntaxError: Invalid attribute name " + S.token.value, S.token.tokLine, S.token.tokPos);
+        } else if(is(TokenType.Identifier)) {
+            let left = match_token(TokenType.Identifier);
+            return new AST_Attribute(left, left.value, null, true, left);
         }
+        js_error("SyntaxError: Invalid attribute name " + S.token.value, S.token.tokLine, S.token.tokPos);
     }
 
     function text(): AST_Node{

@@ -221,12 +221,14 @@ class AST_Column extends AST_Option {
 }
 
 class AST_Attribute extends AST_Node {
+    isCustom: boolean;
     name: string;
     value: AST_Node; //null if there is no value
-    constructor(start: AST_Token, name: string, value: AST_Node, end: AST_Token) {
+    constructor(start: AST_Token, name: string, value: AST_Node, isCustom: boolean, end: AST_Token) {
         super(start, end);
         this.name = name;
         this.value = value;
+        this.isCustom = isCustom;
     }
 }
 
