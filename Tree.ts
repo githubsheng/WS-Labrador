@@ -10,7 +10,7 @@ enum TokenType {
 
     Text, KW_AT, QAS/*question attributes start*/, QAE/*question attributes end*/, OAS/*option attributes start*/,
     OAE/*option attributes end*/, EES/*embedded expression start*/, EEE/*embedded expression end*/,
-    ALBS/*al block start*/, ALBE /*al block ends*/
+    ALBS/*al block start*/, ALBE
 }
 
 interface Scope {
@@ -232,8 +232,6 @@ class AST_Attribute extends AST_Node {
     }
 }
 
-//todo: add rows and columns, attributes....
-
 class AST_Statement extends AST_Node {
 }
 
@@ -365,44 +363,42 @@ class AST_SymbolDec extends AST_Symbol {
 }
 
 class AST_SymbolRef extends AST_Symbol {
-    constructor(start: AST_Token, name: string, end: AST_Token) {
-        super(start, name, end);
+    constructor(nameToken: AST_Token) {
+        super(nameToken, nameToken.value, nameToken);
     }
 }
 
 class AST_String extends AST_Node {
-    public quote: string;
     public value: string;
-    constructor(start: AST_Token, quote: string, value: string, end: AST_Token) {
-        super(start, end);
-        this.quote = quote;
-        this.value = value;
+    constructor(stringToken: AST_Token) {
+        super(stringToken, stringToken);
+        this.value = stringToken.value;
     }
 }
 
 class AST_Num extends AST_Node {
     public value: number;
-    constructor(start: AST_Token, value: number, end: AST_Token) {
-        super(start, end);
-        this.value = value;
+    constructor(numToken: AST_Token) {
+        super(numToken, numToken);
+        this.value = numToken.value;
     }
 }
 
 class AST_True extends AST_Node {
-    constructor(start: AST_Token, end: AST_Token) {
-        super(start, end);
+    constructor(booleanToken: AST_Token) {
+        super(booleanToken, booleanToken);
     }
 }
 
 class AST_False extends AST_Node {
-    constructor(start: AST_Token, end: AST_Token) {
-        super(start, end);
+    constructor(booleanToken: AST_Token) {
+        super(booleanToken, booleanToken);
     }
 }
 
 class AST_Undefined extends AST_Node {
-    constructor(start: AST_Token, end: AST_Token) {
-        super(start, end);
+    constructor(undefinedToken: AST_Token) {
+        super(undefinedToken, undefinedToken);
     }
 }
 
