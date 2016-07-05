@@ -182,11 +182,9 @@ class AST_Question extends AST_SurveyComponent {
 
 class AST_Section extends AST_SurveyComponent {
     attributes: AST_Attribute[];
-    body: AST_SurveyComponent[]; //can be question or interlude nodes.
-    constructor(start: AST_Token, attributes: AST_Attribute[], body: AST_SurveyComponent[], end: AST_Token){
+    constructor(start: AST_Token, attributes: AST_Attribute[], end: AST_Token){
         super(start, end);
         this.attributes = attributes;
-        this.body = body;
     }
 }
 
