@@ -62,7 +62,7 @@ function JS_Parse_Error(message:string, line:number, pos:number) {
 }
 
 JS_Parse_Error.prototype.toString = function () {
-    return this.message + " (line: " + this.line + ", pos: " + this.pos + ")" + "\n\n" + this.message;
+    return this.message + " (line: " + this.line + ")" + "\n\n" + this.message;
 };
 
 function js_error(message, line, pos) {
