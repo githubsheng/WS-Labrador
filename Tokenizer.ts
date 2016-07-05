@@ -46,7 +46,7 @@ function Tokenizer($TEXT:string) {
 
     //following are token types of at
     //use this to find out whether an attribute is the name of a question/row/column or an built-in attribute. for instance << q1 hide="true" >>, q1 is the name, and hide is an built-in attribute
-    var KEYWORDS_AT = makePredicate("row col name hide can_skip fixed after before rotate_rows randomize_rows rotate_columns randomize_columns minimal_selections maximum_selections single_choice multiple_choice single_choice_matrix multi_choice_matrix text number minimal_value maximum_value rotate_questions randomize_questions data xor all default");
+    var KEYWORDS_AT = makePredicate("section section_end row col name hide can_skip fixed after before rotate_rows randomize_rows rotate_columns randomize_columns minimal_selections maximum_selections single_choice multiple_choice single_choice_matrix multi_choice_matrix text number minimal_value maximum_value rotate_questions randomize_questions data xor all default");
 
     function is_letter(code: number | string) {
         if(typeof code === "string") code = (<string>code).charCodeAt(0);
