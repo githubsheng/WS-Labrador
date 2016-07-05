@@ -10,7 +10,7 @@
 
 function Tokenizer($TEXT:string) {
 
-    function token(type:TokenType, value:string) {
+    function token(type:TokenType, value:any) {
         return new AST_Token(type, value, S.tokPos, S.tokLine);
     }
 
@@ -205,7 +205,7 @@ function Tokenizer($TEXT:string) {
         if (dot_prefix) num = dot_prefix + num;
         var val = parseFloat(num);
         if (!isNaN(val)) {
-            return token(TokenType.Num, val.toString());
+            return token(TokenType.Num, val);
         } else {
             parse_error("Invalid syntax: " + num);
         }
@@ -304,7 +304,7 @@ function Tokenizer($TEXT:string) {
         var ch = peek(1);
         if (ch === null) return token(TokenType.EOF, "eof");
         if (ch === "\"" || ch === "\'") return read_string();
-        if (ch === "=") return token(TokenType.Punc, consume());
+        if (ch === "=") return token(TokenType.Operator, consume());
         if (is_identifier_start(ch.charCodeAt(0))) return read_identifier_at();
 
         parse_error("Unexpected character '" + ch + "'");

@@ -146,11 +146,11 @@ class ColumnSymbol extends ScopedSymbol {
 
 class AST_Token {
     type: TokenType;
-    value: string;
+    value: any;
     tokPos: number;
     tokLine: number;
 
-    constructor(type: TokenType, value: string, tokPos: number, tokLine: number) {
+    constructor(type: TokenType, value: any, tokPos: number, tokLine: number) {
         this.type = type;
         this.value = value;
         this.tokPos = tokPos;
