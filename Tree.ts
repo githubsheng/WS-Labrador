@@ -309,21 +309,11 @@ class AST_Call extends AST_Node {
 
 class AST_HasAnswer extends AST_Node {
     public question: AST_SymbolRef;
-    public answers: AST_SymbolRef[];
-    constructor(start: AST_Token, question: AST_SymbolRef, answers: AST_SymbolRef[], end: AST_Token) {
+    public answers: AST_Node[];
+    constructor(start: AST_Token, question: AST_SymbolRef, answers: AST_Node[], end: AST_Token) {
         super(start, end);
         this.question = question;
         this.answers = answers;
-    }
-}
-
-class AST_PropAccess extends AST_Node {
-    public container: AST_PropAccess | AST_SymbolRef;
-    public property: AST_SymbolRef;
-    constructor(start: AST_Token, container: AST_PropAccess | AST_SymbolRef, property: AST_SymbolRef, end: AST_Token) {
-        super(start, end);
-        this.container = container;
-        this.property = property;
     }
 }
 
@@ -340,8 +330,18 @@ class AST_Binary extends AST_Node {
     }
 }
 
+class AST_Dot extends AST_Node {
+    public expression: AST_Node;
+    public property: AST_SymbolRef;
+    constructor(expression: AST_Node, property: AST_SymbolRef) {
+        super(expression.start, property.end);
+        this.expression = expression;
+        this.property = property;
+    }
+}
+
 class AST_Assign extends AST_Binary {
-    constructor(start: AST_Token, left: AST_Node, operator: string, right: AST_Node, end: AST_Token) {
+    constructor(start: AST_Token, left: AST_Node, right: AST_Node, end: AST_Token) {
         super(start, left, "=", right, end);
     }
 }

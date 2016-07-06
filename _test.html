@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="jsoutput/Utils.js"></script>
-    <script src="jsoutput/AST_Token.js"></script>
+    <script src="jsoutput/Tree.js"></script>
     <script src="jsoutput/Tokenizer.js"></script>
+    <script src="jsoutput/Parser.js"></script>
 </head>
 <body>
 <textarea id="ta" style="width: 400px; height: 600px;">
@@ -20,6 +21,11 @@
             t = n();
             console.log(TokenType[t.type] + " ___ " + t.value);
         } while (t && t.value !== "eof");
+    }
+
+    function parse(){
+        var n = new Tokenizer(ta.value);
+        new Parser(n)();
     }
 </script>
 </body>

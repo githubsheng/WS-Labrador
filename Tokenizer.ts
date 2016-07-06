@@ -28,7 +28,7 @@ function Tokenizer($TEXT:string) {
     var calls_al = "has has_not only_has go_to hide terminate show_error randomize_rows rotate_rows randomize_columns rotate_columns resume_row_order resume_column_order rotate_questions randomize_questions resume_question_order query evaluate";
 
     //all al keywords, use this to determine whether an identifier is a keyword or not. for instance, i need to make sure the `variableName` in `def variableName: 1;` is not a keyword
-    var KEYWORDS_AL = makePredicate("true false undefined and def rule action conditions " + calls_al);
+    var KEYWORDS_AL = makePredicate("true false undefined and def rule action conditions answer for " + calls_al);
 
     //help me to find out whether an identifier is actually a function call. in al there is no ( ) and therefore i cannot use ( ) to find out.
     var KEYWORDS_CALL_AL = makePredicate(calls_al);

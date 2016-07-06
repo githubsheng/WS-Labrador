@@ -76,39 +76,195 @@ function Parser(input:() => AST_Token) {
                     console.log(question());
                     break;
                 case TokenType.ALBS:
-                //handle interlude
+                    match_token(TokenType.ALBS);
+                    while(!is(TokenType.ALBE)) {
+                        console.log(statement());
+                    }
+                    match_token(TokenType.ALBE);
+                    break;
             }
         }
     }
+
+    function maybe_propAccess(container: AST_Node){
+        if(is(TokenType.Punc, ".") && (container instanceof AST_Dot|| container instanceof AST_SymbolRef)) {
+            var r = next();
+            if(is(TokenType.Identifier)) {
+                var prop = new AST_SymbolRef(r);
+                next();
+                return maybe_propAccess(new AST_Dot(container, prop));
+            } else {
+                parse_error("SyntaxError: invalid property name");
+            }
+
+        }
+        return container;
+    }
+
+    function symbol_ref() {
+        var ret = new AST_SymbolRef(S.token);
+        next();
+        return ret;
+    }
+
+    function _num(){
+        var ret = new AST_Num(S.token);
+        next();
+        return ret;
+    }
+
+    function _string(){
+        var ret = new AST_String(S.token);
+        next();
+        return ret;
+    }
+
+    function _false(){
+        var ret = new AST_False(S.token);
+        next();
+        return ret;
+    }
+
+    function _true(){
+        var ret = new AST_True(S.token);
+        next();
+        return ret;
+    }
+
+    function _undefined(){
+        var ret = new AST_Undefined(S.token);
+        next();
+        return ret;
+    }
+
+    function _args_list(){
+        let args: AST_Node[] = [];
+        match_token(TokenType.Punc, "(");
+        args.push(expression());
+        while(!is(TokenType.Punc, ")")){
+            match_token(TokenType.Punc, ",");
+            args.push(expression());
+        }
+        match_token(TokenType.Punc, ")");
+        return args;
+    }
+
+    function _answer_has(){
+        let start = S.token;
+        match_token(TokenType.KW_AL, "answer");
+        match_token(TokenType.KW_AL, "for");
+        let question = new AST_SymbolRef(match_token(TokenType.Identifier));
+        switch(S.token.value){
+            case "has":
+            case "has_not":
+            case "only_has":
+                next();
+                return new AST_HasAnswer(start, question, _args_list(), prev());
+            default:
+                unexpected();
+        }
+    }
     
-    function atom_node(): AST_Node{
-        var tok = S.token, ret;
+    function expr_atom(): AST_Node{
+        var tok = S.token;
         switch (tok.type) {
+            case TokenType.Punc:
+                if(is(TokenType.Punc, "(")) {
+                    let start = tok; //start token is (
+                    next();
+                    var ex = expression();
+                    ex.start = start;
+                    ex.end = S.token; //end token is )
+                    match_token(TokenType.Punc, ")");
+                    return maybe_propAccess(ex);
+                }
+                break;
             case TokenType.Identifier:
-                ret = new AST_SymbolRef(tok); //symbol declaration will be handled separately.
-                break;
+                return maybe_propAccess(symbol_ref());
             case TokenType.Num:
-                ret = new AST_Num(tok);
-                break;
+                return _num();
             case TokenType.String:
-                ret = new AST_String(tok);
-                break;
+                return _string();
             case TokenType.KW_Val_AL:
                 switch (tok.value) {
                     case "false":
-                        ret = new AST_False(tok);
-                        break;
+                        return _false();
                     case "true":
-                        ret = new AST_True(tok);
-                        break;
+                        return _true();
                     case "undefined":
-                        ret = new AST_Undefined(tok);
-                        break;
+                        return _undefined();
+                }
+                break;
+            case TokenType.KW_AL:
+                if(tok.value === "answer") {
+                    return _answer_has();
                 }
                 break;
         }
-        next();
+        unexpected();
+    }
+
+    var PRECEDENCE = (function(a, ret){
+        for (var i = 0; i < a.length; ++i) {
+            var b = a[i];
+            for (var j = 0; j < b.length; ++j) {
+                ret[b[j]] = i + 1;
+            }
+        }
         return ret;
+    })(
+        [
+            ["|"],
+            ["and"],
+            ["==", "!="],
+            ["<", ">", "<=", ">="],
+            ["+", "-"],
+            ["*", "/", "%"]
+        ],
+        {}
+    );
+
+    var expr_op = function(left: AST_Node, min_prec) {
+        var op: string = is(TokenType.Operator) ? S.token.value : null;
+        var prec = op != null ? PRECEDENCE[op] : null; // if op is = here PRECEDENCE would return -1
+        if (prec != null && prec > min_prec) { // if op is = prec would be -1 and following code won't execute
+            next();
+            var right = expr_op(expr_atom(), prec);
+            return expr_op(new AST_Binary(left.start, left, op, right, right.end), min_prec);
+        }
+        return left;
+    };
+
+    function expr_ops() {
+        return expr_op(expr_atom(), 0);
+    }
+
+    //later checking must ensure no custom variable can reference any system managed variables such as q1, q2, q1.r1 and so on.
+    //for instance, `def a = q1` is illegal.
+    //further more, system managed variables and their properties are read only.
+    //for instance, `q1.text = "hello"` is illegal.
+    //to change properties, use a built in command.
+    function is_assignable(expr) {
+        //given above restrictions, expr cannot be AST_Dot, since you cannot define custom structs (which has properties), nor can
+        //you assign a new value to a system managed variable's property using `=`
+        return expr instanceof AST_SymbolRef; //declaration is handled separately.
+    }
+
+    function maybe_assign() {
+        var start = S.token;
+        var left = expr_ops();
+        if (is(TokenType.Operator, "=")) {
+            if(is_assignable(left)) {
+                next();
+                return new AST_Assign(start, left, expr_ops(), prev());
+            }
+            parse_error("SyntaxError: Invalid assignment");
+        }
+        return left;
+    }
+
+    function expression(): AST_Node{
+        return maybe_assign();
     }
 
     function attribute(): AST_Attribute{
@@ -118,7 +274,7 @@ function Parser(input:() => AST_Token) {
                 next();
                 let valNode: AST_Node;
                 if(is(TokenType.String)) {
-                    valNode = atom_node();
+                    valNode = expr_atom();
                 } else if(is(TokenType.EES)) {
                     throw new Error("not yet implemented");
                 } else {
@@ -228,21 +384,24 @@ function Parser(input:() => AST_Token) {
     }
 
     function interlude(){
-        //consume <%
-        //while next token is not %>, call statement
-        //consume %>
+        match_token(TokenType.ALBS);
+        while(!is(TokenType.ALBE)) {
+            statement();
+        }
+        match_token(TokenType.ALBE);
     }
 
-    function simple_statement(){
 
-    }
 
     function block_statement(){
 
     }
-    
+
+    function simple_statement(){
+        return new AST_SimpleStatement(S.token, expression(), prev());
+    }
+
     function statement() {
-        var tmp;
         //a statement can start with the following tokens
         switch (S.token.type) {
             case TokenType.String:
@@ -250,11 +409,16 @@ function Parser(input:() => AST_Token) {
             case TokenType.KW_Val_AL:
             case TokenType.Identifier:
                 return simple_statement();
+            case TokenType.Punc:
+                if(is(TokenType.Punc, "("))
+                    return simple_statement();
+                break;
             case TokenType.KW_Call_AL:
+                //these built-in calls cannot be part of an expression.
                 //handle built in function calls
                 break;
             case TokenType.KW_AL:
-                switch (tmp = S.token.value, next(), tmp) {
+                switch (S.token.value) {
                     case "rule":
                         //handle rule definition
                     case "action":
@@ -263,6 +427,10 @@ function Parser(input:() => AST_Token) {
                         //handle conditions
                     case "def":
                         //handle variable definition
+                    case "answer":
+                        //answer for ... has / only_has ... is treated like a function call in js, unlike `TokenType.KW_Call_AL`, it can
+                        //be part of an expression.
+                        return simple_statement();
                     default:
                         unexpected();
                 }
