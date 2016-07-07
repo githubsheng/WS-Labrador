@@ -49,12 +49,8 @@ function Parser(input:() => AST_Token) {
         return S.prev;
     }
 
-    function match_token(type: TokenType, val?: string): AST_Token {
-        if (is(type, val)) {
-            let ret = S.token;
-            next();
-            return ret;
-        }
+    function check_token(type: TokenType, val?: string): AST_Token {
+        if (is(type, val)) return S.token;
         var msg = "SyntaxError: ";
         if(!val) {
             switch (type) {
@@ -103,6 +99,12 @@ function Parser(input:() => AST_Token) {
         js_error(msg, S.token.tokLine, S.token.tokPos);
     }
 
+    function match_token(type: TokenType, val?: string): AST_Token {
+        var ret = check_token(type, val);
+        next();
+        return ret;
+    }
+
     function parse_error(message: string) {
         js_error(message, S.token.tokLine, S.token.tokPos);
     }
@@ -115,11 +117,10 @@ function Parser(input:() => AST_Token) {
 
     function maybe_propAccess(container: AST_Node){
         if(is(TokenType.Punc, ".") && (container instanceof AST_Dot|| container instanceof AST_SymbolRef)) {
-            var r = next();
+            var propToken = next();
             if(is(TokenType.Identifier)) {
-                var prop = new AST_SymbolRef(r);
                 next();
-                return maybe_propAccess(new AST_Dot(container, prop));
+                return maybe_propAccess(new AST_Dot(container, propToken.value, propToken));
             } else {
                 parse_error("SyntaxError: invalid property name");
             }
@@ -475,6 +476,27 @@ function Parser(input:() => AST_Token) {
         }
     }
 
+    function build_in_func_cmd(){
+        var start = S.token;
+        var cmdName = match_token(TokenType.KW_Cmd_AL).value;
+        var args = _args_list();
+        return new AST_BuiltInCmdCall(start, cmdName, args, prev());
+    }
+
+    function _evaluate(){
+        var start = S.token;
+        match_token(TokenType.KW_Cmd_AL, "evaluate");
+        check_token(TokenType.Identifier);
+        return new AST_Evaluate(start, symbol_ref(), prev());
+    }
+
+    function _do(){
+        var start = S.token;
+        match_token(TokenType.KW_Cmd_AL, "do");
+        check_token(TokenType.Identifier);
+        return new AST_Do(start, symbol_ref(), prev());
+    }
+
     function statement(): AST_Statement {
         //a statement can start with the following tokens
         switch (S.token.type) {
@@ -487,10 +509,30 @@ function Parser(input:() => AST_Token) {
                 if(is(TokenType.Punc, "("))
                     return simple_statement();
                 break;
-            case TokenType.KW_Call_AL:
+            case TokenType.KW_Cmd_AL:
+                switch(S.token.value) {
+                    case "evaluate":
+                        return _evaluate();
+                    case "do":
+                        return _do();
+                    case "go_to":
+                    case "hide":
+                    case "terminate":
+                    case "show_error":
+                    case "randomize_rows":
+                    case "rotate_rows":
+                    case "randomize_columns":
+                    case "rotate_columns":
+                    case "resume_row_order":
+                    case "resume_column_order":
+                    case "rotate_questions":
+                    case "randomize_questions":
+                    case "resume_question_order":
+                        return build_in_func_cmd();
+                }
+                break;
                 //these built-in calls cannot be part of an expression.
                 //handle built in function calls
-                break;
             case TokenType.KW_AL:
                 switch (S.token.value) {
                     case "rule":
@@ -502,7 +544,7 @@ function Parser(input:() => AST_Token) {
                     case "def":
                         return _def();
                     case "answer":
-                        //answer for ... has / only_has ... is treated like a function call in js, unlike `TokenType.KW_Call_AL`, it can
+                        //answer for ... has / only_has ... is treated like a function call in js, unlike `TokenType.KW_Cmd_AL`, it can
                         //be part of an expression.
                         return simple_statement();
                     default:

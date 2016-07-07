@@ -25,13 +25,13 @@ function Tokenizer($TEXT:string) {
     };
 
     //following are token types of al
-    var calls_al = "has has_not only_has go_to hide terminate show_error randomize_rows rotate_rows randomize_columns rotate_columns resume_row_order resume_column_order rotate_questions randomize_questions resume_question_order query evaluate";
+    var command_al = "go_to hide terminate show_error randomize_rows rotate_rows randomize_columns rotate_columns resume_row_order resume_column_order rotate_questions randomize_questions resume_question_order evaluate do";
 
     //all al keywords, use this to determine whether an identifier is a keyword or not. for instance, i need to make sure the `variableName` in `def variableName: 1;` is not a keyword
-    var KEYWORDS_AL = makePredicate("true false undefined and def rule action conditions answer for " + calls_al);
+    var KEYWORDS_AL = makePredicate("true false undefined and def rule action conditions answer for has has_not only_has " + command_al);
 
     //help me to find out whether an identifier is actually a function call. in al there is no ( ) and therefore i cannot use ( ) to find out.
-    var KEYWORDS_CALL_AL = makePredicate(calls_al);
+    var KEYWORDS_CALL_AL = makePredicate(command_al);
 
     //the start char of an operator, used for next_token to predicate whether i am going to handle an operator. "/" and "and" handled by "handle_slash" and "read_identifier_al" separately
     var OPERATORS_START_CHAR = makePredicate("+ - * % = < > !");
@@ -174,7 +174,7 @@ function Tokenizer($TEXT:string) {
         var w = read_identifier();
         if (KEYWORDS_VALUE_AL(w)) return token(TokenType.KW_Val_AL, w); //true, false, undefined
         if (OPERATORS_AL(w)) return token(TokenType.Operator, w); //operator "and" match an identifier patter, but is really an operator
-        if (KEYWORDS_CALL_AL(w)) return token(TokenType.KW_Call_AL, w); //function call in al
+        if (KEYWORDS_CALL_AL(w)) return token(TokenType.KW_Cmd_AL, w); //function call in al
         if (KEYWORDS_AL(w)) return token(TokenType.KW_AL, w);
         return token(TokenType.Identifier, w);
     }

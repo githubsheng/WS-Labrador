@@ -6,7 +6,7 @@
 enum TokenType {
     String, Identifier, Num, Punc, Operator, EOF, //shared
 
-    KW_AL, KW_Call_AL, KW_Val_AL,
+    KW_AL, KW_Cmd_AL, KW_Val_AL,
 
     Text, KW_AT, QAS/*question attributes start*/, QAE/*question attributes end*/, OAS/*option attributes start*/,
     OAE/*option attributes end*/, EES/*embedded expression start*/, EEE/*embedded expression end*/,
@@ -285,12 +285,26 @@ class AST_RuleDef extends AST_Statement {
 }
 
 //following are mostly used as the body of a simple statement
-class AST_Call extends AST_Node {
-    public funcName: AST_SymbolRef;
-    public args: AST_Node[];
-    constructor(start: AST_Token, funcName: AST_SymbolRef, args: AST_Node[], end: AST_Token) {
+
+//this is for calling user defined action
+class AST_Call extends AST_Statement {
+    public target: AST_SymbolRef;
+    constructor(start: AST_Token, target: AST_SymbolRef, end: AST_Token) {
         super(start, end);
-        this.funcName = funcName;
+        this.target = target;
+    }
+}
+
+class AST_Evaluate extends AST_Call {}
+
+class AST_Do extends AST_Call {}
+
+class AST_BuiltInCmdCall extends AST_Statement {
+    public cmdName: string;
+    public args: AST_Node[];
+    constructor(start: AST_Token, cmdName: string, args: AST_Node[], end: AST_Token) {
+        super(start, end);
+        this.cmdName = cmdName;
         this.args = args;
     }
 }
@@ -320,9 +334,9 @@ class AST_Binary extends AST_Node {
 
 class AST_Dot extends AST_Node {
     public expression: AST_Node;
-    public property: AST_SymbolRef;
-    constructor(expression: AST_Node, property: AST_SymbolRef) {
-        super(expression.start, property.end);
+    public property: string;
+    constructor(expression: AST_Node, property: string, end: AST_Token) {
+        super(expression.start, end);
         this.expression = expression;
         this.property = property;
     }
