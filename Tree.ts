@@ -275,10 +275,10 @@ class AST_ActionDef extends AST_Statement {
 }
 
 class AST_RuleDef extends AST_Statement {
-    public name: AST_SymbolDec;
+    public name: string;
     public conditions: AST_SimpleStatement[];
     public action: AST_BlockStatement;
-    constructor(start: AST_Token, name: AST_SymbolDec, conditions: AST_SimpleStatement[], action:AST_BlockStatement, end: AST_Token) {
+    constructor(start: AST_Token, name: string, conditions: AST_SimpleStatement[], action:AST_BlockStatement, end: AST_Token) {
         super(start, end);
         this.name = name;
         this.conditions = conditions;

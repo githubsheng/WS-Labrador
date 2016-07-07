@@ -55,7 +55,49 @@ function Parser(input:() => AST_Token) {
             next();
             return ret;
         }
-        js_error("SyntaxError: not expecting " + S.token.value, S.token.tokLine, S.token.tokPos);
+        var msg = "SyntaxError: ";
+        if(!val) {
+            switch (type) {
+                case TokenType.QAS:
+                    val = "<<";
+                    break;
+                case TokenType.QAE:
+                    val = ">>";
+                    break;
+                case TokenType.EES:
+                    val = "[";
+                    break;
+                case TokenType.EEE:
+                    val = "]";
+                    break;
+                case TokenType.ALBS:
+                    val = "<%";
+                    break;
+                case TokenType.ALBE:
+                    val = "%>";
+                    break;
+                case TokenType.Num:
+                    val = "number";
+                    break;
+                case TokenType.String:
+                    val = "string";
+                    break;
+                case TokenType.Operator:
+                    val = "operator";
+                    break;
+                case TokenType.Text:
+                    val = "text";
+                    break;
+            }
+        }
+        if(val) {
+            msg += "expecting " + val + " but found " + S.token.value;
+        } else {
+            msg += "not expecting " + S.token.value;
+        }
+
+
+        js_error(msg, S.token.tokLine, S.token.tokPos);
     }
 
     function parse_error(message: string) {
@@ -214,7 +256,6 @@ function Parser(input:() => AST_Token) {
         return ret;
     })(
         [
-            ["|"],
             ["and"],
             ["==", "!="],
             ["<", ">", "<=", ">="],
@@ -392,16 +433,40 @@ function Parser(input:() => AST_Token) {
     }
 
 
-
-    function block_statement(){
-
+    function block_statement(): AST_BlockStatement{
+        var start = S.token;
+        let stmts: AST_SimpleStatement[] = [];
+        match_token(TokenType.Punc, "{");
+        while(!is(TokenType.Punc, "}")) {
+            stmts.push(simple_statement());
+        }
+        match_token(TokenType.Punc, "}");
+        return new AST_BlockStatement(start, stmts, prev());
     }
 
     function simple_statement(){
         return new AST_SimpleStatement(S.token, expression(), prev());
     }
 
-    function statement() {
+    function _condition(): AST_SimpleStatement{
+        match_token(TokenType.Punc, "|");
+        return simple_statement();
+    }
+
+    function _rule(){
+        var start = S.token;
+        let conditions: AST_SimpleStatement[] = [];
+        match_token(TokenType.KW_AL, "rule");
+        var name = match_token(TokenType.Identifier).value;
+        match_token(TokenType.Punc, ":");
+        conditions.push(_condition());
+        while(!is(TokenType.Punc, "{")) {
+            conditions.push(_condition());
+        }
+        return new AST_RuleDef(start, name, conditions, block_statement(), prev());
+    }
+
+    function statement(): AST_Statement {
         //a statement can start with the following tokens
         switch (S.token.type) {
             case TokenType.String:
@@ -420,7 +485,7 @@ function Parser(input:() => AST_Token) {
             case TokenType.KW_AL:
                 switch (S.token.value) {
                     case "rule":
-                        //handle rule definition
+                        return _rule();
                     case "action":
                         //handle action definition
                     case "conditions":
