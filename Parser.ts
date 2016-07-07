@@ -88,6 +88,9 @@ function Parser(input:() => AST_Token) {
                 case TokenType.Text:
                     val = "text";
                     break;
+                case TokenType.Identifier:
+                    val = "identifier / name";
+                    break;
             }
         }
         if(val) {
@@ -108,24 +111,6 @@ function Parser(input:() => AST_Token) {
         if (token == null)
             token = S.token;
         js_error("unexpected token: " + token.value, token.tokLine, token.tokPos);
-    }
-
-    //parse will continue calling this method until reaching eof
-    function parse() {
-        while(S.token.type !== TokenType.EOF) {
-            switch (S.token.type) {
-                case TokenType.QAS:
-                    console.log(question());
-                    break;
-                case TokenType.ALBS:
-                    match_token(TokenType.ALBS);
-                    while(!is(TokenType.ALBE)) {
-                        console.log(statement());
-                    }
-                    match_token(TokenType.ALBE);
-                    break;
-            }
-        }
     }
 
     function maybe_propAccess(container: AST_Node){
@@ -265,7 +250,7 @@ function Parser(input:() => AST_Token) {
         {}
     );
 
-    var expr_op = function(left: AST_Node, min_prec) {
+    var expr_op = function(left: AST_Node, min_prec): AST_Node {
         var op: string = is(TokenType.Operator) ? S.token.value : null;
         var prec = op != null ? PRECEDENCE[op] : null; // if op is = here PRECEDENCE would return -1
         if (prec != null && prec > min_prec) { // if op is = prec would be -1 and following code won't execute
@@ -424,14 +409,6 @@ function Parser(input:() => AST_Token) {
         }
     }
 
-    function interlude(){
-        match_token(TokenType.ALBS);
-        while(!is(TokenType.ALBE)) {
-            statement();
-        }
-        match_token(TokenType.ALBE);
-    }
-
 
     function block_statement(): AST_BlockStatement{
         var start = S.token;
@@ -466,6 +443,38 @@ function Parser(input:() => AST_Token) {
         return new AST_RuleDef(start, name, conditions, block_statement(), prev());
     }
 
+    function _action(){
+        var start = S.token;
+        match_token(TokenType.KW_AL, "action");
+        var name = match_token(TokenType.Identifier).value;
+        return new AST_ActionDef(start, name, block_statement(), prev());
+    }
+
+    function _condition_set(){
+        var start = S.token;
+        match_token(TokenType.KW_AL, "conditions");
+        var name = match_token(TokenType.Identifier).value;
+        match_token(TokenType.Punc, ":");
+        let conditions: AST_SimpleStatement[] = [];
+        conditions.push(_condition());
+        while(!is(TokenType.Punc, "end")) {
+            conditions.push(_condition());
+        }
+        return new AST_ConditionSetDef(start, name, conditions, prev());
+    }
+
+    function _def(){
+        var start = S.token;
+        match_token(TokenType.KW_AL, "def");
+        var name = match_token(TokenType.Identifier).value;
+        if(is(TokenType.Operator, "=")) {
+            match_token(TokenType.Operator, "=");
+            return new AST_SymbolDec(start, name, expr_ops(), prev());
+        } else {
+            return new AST_SymbolDec(start, name, null, prev());
+        }
+    }
+
     function statement(): AST_Statement {
         //a statement can start with the following tokens
         switch (S.token.type) {
@@ -487,11 +496,11 @@ function Parser(input:() => AST_Token) {
                     case "rule":
                         return _rule();
                     case "action":
-                        //handle action definition
+                        return _action();
                     case "conditions":
-                        //handle conditions
+                        return _condition_set();
                     case "def":
-                        //handle variable definition
+                        return _def();
                     case "answer":
                         //answer for ... has / only_has ... is treated like a function call in js, unlike `TokenType.KW_Call_AL`, it can
                         //be part of an expression.
@@ -504,6 +513,32 @@ function Parser(input:() => AST_Token) {
                 unexpected();
         }
     }
+
+    function interlude(){
+        var start = S.token;
+        let stmts: AST_Statement[] = [];
+        match_token(TokenType.ALBS);
+        while(!is(TokenType.ALBE)) {
+            stmts.push(statement());
+        }
+        match_token(TokenType.ALBE);
+        return new AST_Interlude(start, stmts, prev());
+    }
+
+    //parse will continue calling this method until reaching eof
+    function parse() {
+        while(S.token.type !== TokenType.EOF) {
+            switch (S.token.type) {
+                case TokenType.QAS:
+                    console.log(question());
+                    break;
+                case TokenType.ALBS:
+                    console.log(interlude());
+                    break;
+            }
+        }
+    }
+
 
     return parse;
 

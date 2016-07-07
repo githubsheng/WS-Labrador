@@ -189,11 +189,9 @@ class AST_Section extends AST_SurveyComponent {
 }
 
 class AST_Interlude extends AST_SurveyComponent {
-    attributes: AST_Attribute[];
     body: AST_Node[]; //inside interlude there should not be section, question, row, column definitions related nodes.
-    constructor(start: AST_Token, attributes: AST_Attribute[], body: AST_Node[], end: AST_Token){
+    constructor(start: AST_Token, body: AST_Node[], end: AST_Token){
         super(start, end);
-        this.attributes = attributes;
         this.body = body;
     }
 }
@@ -255,9 +253,9 @@ class AST_BlockStatement extends AST_Statement {
 }
 
 class AST_ConditionSetDef extends AST_Statement {
-    public name: AST_SymbolDec;
+    public name: string;
     public body: AST_SimpleStatement[];
-    constructor(start: AST_Token, name: AST_SymbolDec, body: AST_SimpleStatement[], end: AST_Token) {
+    constructor(start: AST_Token, name: string, body: AST_SimpleStatement[], end: AST_Token) {
         super(start, end);
         this.name = name;
         this.body = body;
@@ -283,16 +281,6 @@ class AST_RuleDef extends AST_Statement {
         this.name = name;
         this.conditions = conditions;
         this.action = action;
-    }
-}
-
-class AST_VarDef extends AST_Statement {
-    public name: AST_SymbolDec;
-    public value: AST_Node;
-    constructor(start: AST_Token, name: AST_SymbolDec, value: AST_Node, end: AST_Token) {
-        super(start, end);
-        this.name = name;
-        this.value = value; //should be null if there is no value
     }
 }
 

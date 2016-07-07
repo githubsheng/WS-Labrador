@@ -42,7 +42,7 @@ function Tokenizer($TEXT:string) {
     var KEYWORDS_VALUE_AL = makePredicate("true false undefined");
 
     //used in next_token to predicate whether im going to handle a punctuation. dot is also a punctuation, it is separately handled by `handle_dot`
-    var PUNC_CHARS_AL = makePredicate("{ } ( ) , | :"); //example: `action {...}` `(1+2)*4` `hide q1, q2, q3`. ${, }, [, ], << >> <% and %> are handled separately
+    var PUNC_CHARS_AL = makePredicate("{ } ( ) , | : end"); //example: `action {...}` `(1+2)*4` `hide q1, q2, q3`. ${, }, [, ], << >> <% and %> are handled separately
 
     //following are token types of at
     //use this to find out whether an attribute is the name of a question/row/column or an built-in attribute. for instance << q1 hide="true" >>, q1 is the name, and hide is an built-in attribute
