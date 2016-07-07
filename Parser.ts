@@ -196,7 +196,7 @@ function Parser(input:() => AST_Token) {
     function expr_atom(): AST_Node{
         var tok = S.token;
         switch (tok.type) {
-            case TokenType.Punc:
+            case TokenType.Punc: 
                 if(is(TokenType.Punc, "(")) {
                     let start = tok; //start token is (
                     next();
@@ -510,6 +510,7 @@ function Parser(input:() => AST_Token) {
                     return simple_statement();
                 break;
             case TokenType.KW_Cmd_AL:
+                //these built-in commands cannot be part of an expression.
                 switch(S.token.value) {
                     case "evaluate":
                         return _evaluate();
@@ -531,8 +532,6 @@ function Parser(input:() => AST_Token) {
                         return build_in_func_cmd();
                 }
                 break;
-                //these built-in calls cannot be part of an expression.
-                //handle built in function calls
             case TokenType.KW_AL:
                 switch (S.token.value) {
                     case "rule":
@@ -569,16 +568,18 @@ function Parser(input:() => AST_Token) {
 
     //parse will continue calling this method until reaching eof
     function parse() {
+        let root = new AST_Root();
         while(S.token.type !== TokenType.EOF) {
             switch (S.token.type) {
                 case TokenType.QAS:
-                    console.log(question());
+                    root.surveyComponents.push(question());
                     break;
                 case TokenType.ALBS:
-                    console.log(interlude());
+                    root.surveyComponents.push(interlude());
                     break;
             }
         }
+        return root;
     }
 
 

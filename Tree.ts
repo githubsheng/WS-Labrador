@@ -132,17 +132,17 @@ class QuestionSymbol extends ScopedSymbol {
     }
 }
 
-class RowSymbol extends ScopedSymbol {
-    constructor(name: string, definedInScope: Scope) {
-        super(name, definedInScope);
-    }
-}
-
-class ColumnSymbol extends ScopedSymbol {
-    constructor(name: string, definedInScope: Scope) {
-        super(name, definedInScope);
-    }
-}
+// class RowSymbol extends ScopedSymbol {
+//     constructor(name: string, definedInScope: Scope) {
+//         super(name, definedInScope);
+//     }
+// }
+//
+// class ColumnSymbol extends ScopedSymbol {
+//     constructor(name: string, definedInScope: Scope) {
+//         super(name, definedInScope);
+//     }
+// }
 
 class AST_Token {
     type: TokenType;
@@ -161,6 +161,10 @@ class AST_Token {
 class AST_Node {
     symbol: Symbol; //null if this field does not apply for the node
     constructor(public start: AST_Token, public end: AST_Token){}
+}
+
+class AST_Root {
+    public surveyComponents: AST_SurveyComponent[] = [];
 }
 
 class AST_SurveyComponent extends AST_Node {
@@ -189,8 +193,8 @@ class AST_Section extends AST_SurveyComponent {
 }
 
 class AST_Interlude extends AST_SurveyComponent {
-    body: AST_Node[]; //inside interlude there should not be section, question, row, column definitions related nodes.
-    constructor(start: AST_Token, body: AST_Node[], end: AST_Token){
+    body: AST_Statement[]; //inside interlude there should not be section, question, row, column definitions related nodes.
+    constructor(start: AST_Token, body: AST_Statement[], end: AST_Token){
         super(start, end);
         this.body = body;
     }
@@ -263,9 +267,9 @@ class AST_ConditionSetDef extends AST_Statement {
 }
 
 class AST_ActionDef extends AST_Statement {
-    public name: AST_SymbolDec;
+    public name: string;
     public body: AST_BlockStatement;
-    constructor(start: AST_Token, name: AST_SymbolDec, body: AST_BlockStatement, end: AST_Token) {
+    constructor(start: AST_Token, name: string, body: AST_BlockStatement, end: AST_Token) {
         super(start, end);
         this.name = name;
         this.body = body;
