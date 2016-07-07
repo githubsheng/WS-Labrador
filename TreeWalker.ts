@@ -56,7 +56,7 @@ function Walker(root:AST_Root, preCallback:(node:AST_Node) => void, postCallback
     });
 
     var walkAttrib = walkTemplate<AST_Attribute>(function (node) {
-        _walk(node.value);
+        if(node.value) _walk(node.value);
     });
 
     var walkSimpleStatement = walkTemplate<AST_SimpleStatement>(function (node) {
@@ -181,6 +181,12 @@ function Walker(root:AST_Root, preCallback:(node:AST_Node) => void, postCallback
         }
 
 
+    }
+
+    return function(){
+        for(let c of root.surveyComponents){
+            _walk(c);
+        }
     }
 
 

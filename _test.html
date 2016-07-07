@@ -7,6 +7,7 @@
     <script src="jsoutput/Tree.js"></script>
     <script src="jsoutput/Tokenizer.js"></script>
     <script src="jsoutput/Parser.js"></script>
+    <script src="jsoutput/TreeWalker.js"></script>
 </head>
 <body>
 <textarea id="ta" style="width: 400px; height: 600px;">
@@ -25,7 +26,22 @@
 
     function parse(){
         var n = new Tokenizer(ta.value);
-        new Parser(n)();
+        var root = new Parser(n)();
+
+        var levelStack = [0];
+        function pre(node){
+            var hl = levelStack[levelStack.length - 1];
+            var level = hl + 1;
+            levelStack.push(level);
+            var preStr = new Array(level - 1).fill("__").join("");
+            console.log(preStr, node.constructor.name);
+        }
+
+        function post(){
+            levelStack.pop();
+        }
+
+        new Walker(root, pre, post)();
     }
 </script>
 </body>
