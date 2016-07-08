@@ -154,7 +154,7 @@ function SemanticChecking(root:AST_Root) {
     }
 
     function checkIfAttribApplyToOption(node: AST_Option) {
-        var legalAttribNamesForOptions = ["fixed", "data", "xor", "all", "col"];
+        var legalAttribNamesForOptions = ["fixed", "data", "xor", "all", "col", "default"];
         node.attributes.forEach(function(attrib){
             if(attrib.isCustom) return;
 
@@ -193,6 +193,10 @@ function SemanticChecking(root:AST_Root) {
                 case "randomize_rows":
                 case "rotate_columns":
                 case "randomize_columns":
+                case "hide":
+                case "can_skip":
+                case "rotate_questions":
+                case "randomize_questions":
                     if(attrib.value !== null && !(attrib.value instanceof AST_SimpleStatement))
                         js_error(attrib.name + " either does not have value or has a simple expression as value", attrib.end.tokLine, attrib.end.tokPos);
                     break;
@@ -211,16 +215,22 @@ function SemanticChecking(root:AST_Root) {
                 case "data":
                     if(attrib.value == null || !(attrib.value instanceof AST_String))
                         s_error("data needs to have a string as value", attrib);
+                    break;
+                case "fixed":
+                case "all":
+                case "xor":
+                case "default":
+                    if(attrib.value !== null) s_error(attrib.name + " does not need any value", attrib);
             }
         }
 
     }
 
+    Walker(root, checkQuestionStructure)();
+    Walker(root, checkAttributeValue)();
+
     //build symbol table and define scopes
 
     //check if property access are legal
-
-    Walker(root, checkQuestionStructure)();
-    Walker(root, checkAttributeValue)();
 
 }
