@@ -520,15 +520,6 @@ function Parser(input:() => AST_Token) {
                     case "hide":
                     case "terminate":
                     case "show_error":
-                    case "randomize_rows":
-                    case "rotate_rows":
-                    case "randomize_columns":
-                    case "rotate_columns":
-                    case "resume_row_order":
-                    case "resume_column_order":
-                    case "rotate_questions":
-                    case "randomize_questions":
-                    case "resume_question_order":
                         return build_in_func_cmd();
                 }
                 break;

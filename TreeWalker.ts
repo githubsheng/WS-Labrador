@@ -3,7 +3,7 @@
  * Created by wangsheng on 7/7/16.
  */
 
-function Walker(root:AST_Root, preCallback:(node:AST_Node) => void, postCallback:(node:AST_Node) => void) {
+function Walker(root:AST_Root, preCallback?:(node:AST_Node) => void, postCallback?:(node:AST_Node) => void) {
 
     function walkTemplate<T extends AST_Node>(walk?:(node:T)=> void):(node:T) => void {
         return function (node:T) {
@@ -179,8 +179,6 @@ function Walker(root:AST_Root, preCallback:(node:AST_Node) => void, postCallback
                 walkLeaf(node);
                 break;
         }
-
-
     }
 
     return function(){
@@ -188,6 +186,4 @@ function Walker(root:AST_Root, preCallback:(node:AST_Node) => void, postCallback
             _walk(c);
         }
     }
-
-
 }

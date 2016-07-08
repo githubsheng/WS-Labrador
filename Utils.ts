@@ -68,3 +68,14 @@ JS_Parse_Error.prototype.toString = function () {
 function js_error(message, line, pos) {
     throw new JS_Parse_Error(message, line, pos);
 }
+
+function s_error(message, token) {
+    throw new JS_Parse_Error(message, token.start.tokLine, token.start.tokPos);
+}
+
+//polyfill
+Number["isInteger"] = Number["isInteger"] || function(value) {
+        return typeof value === "number" &&
+            isFinite(value) &&
+            Math.floor(value) === value;
+    };

@@ -8,6 +8,7 @@
     <script src="jsoutput/Tokenizer.js"></script>
     <script src="jsoutput/Parser.js"></script>
     <script src="jsoutput/TreeWalker.js"></script>
+    <script src="jsoutput/SemanticChecking.js"></script>
 </head>
 <body>
 <textarea id="ta" style="width: 400px; height: 600px;">
@@ -42,6 +43,7 @@
         }
 
         new Walker(root, pre, post)();
+        SemanticChecking(root);
     }
 </script>
 </body>

@@ -25,7 +25,7 @@ function Tokenizer($TEXT:string) {
     };
 
     //following are token types of al
-    var command_al = "go_to hide terminate show_error randomize_rows rotate_rows randomize_columns rotate_columns resume_row_order resume_column_order rotate_questions randomize_questions resume_question_order evaluate do";
+    var command_al = "go_to hide terminate show_error evaluate do";
 
     //all al keywords, use this to determine whether an identifier is a keyword or not. for instance, i need to make sure the `variableName` in `def variableName: 1;` is not a keyword
     var KEYWORDS_AL = makePredicate("true false undefined and def rule action conditions answer for has has_not only_has " + command_al);
@@ -46,7 +46,8 @@ function Tokenizer($TEXT:string) {
 
     //following are token types of at
     //use this to find out whether an attribute is the name of a question/row/column or an built-in attribute. for instance << q1 hide="true" >>, q1 is the name, and hide is an built-in attribute
-    var KEYWORDS_AT = makePredicate("section section_end row col name hide can_skip fixed after before rotate_rows randomize_rows rotate_columns randomize_columns minimal_selections maximum_selections single_choice multiple_choice single_choice_matrix multi_choice_matrix text number minimal_value maximum_value rotate_questions randomize_questions data xor all default");
+    var questionTypes = "single_choice multiple_choice single_choice_matrix multi_choice_matrix text number ";
+    var KEYWORDS_AT = makePredicate(questionTypes + "section section_end row col name hide can_skip fixed after before rotate_rows randomize_rows rotate_columns randomize_columns minimal_selections maximum_selections minimal_value maximum_value rotate_questions randomize_questions data xor all default");
 
     function is_letter(code: number | string) {
         if(typeof code === "string") code = (<string>code).charCodeAt(0);
